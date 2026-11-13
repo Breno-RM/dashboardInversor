@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<title>Supervisório | Modbus RTU</title>
+<style>
+:root{--bg:#0b1220;--panel:#121d2e;--panel2:#172438;--line:#26364d;--text:#e8eef7;--muted:#91a2b8;--accent:#35c58a;--blue:#55a7ff;--red:#f16b72;--yellow:#e9b95b;--shadow:0 12px 30px #0003}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,Segoe UI,Arial,sans-serif}
+button,input{font:inherit}button{cursor:pointer;border:0}
+.app{min-height:100vh;display:grid;grid-template-columns:248px 1fr}
+.sidebar{background:#0e1828;border-right:1px solid var(--line);padding:24px 16px;display:flex;flex-direction:column;gap:24px}
+.brand{display:flex;align-items:center;gap:12px;padding:0 8px}.brand-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#35c58a,#2386c9);display:grid;place-items:center;font-weight:900;color:#06131a}.brand strong{display:block;font-size:15px}.brand small{color:var(--muted)}
+.nav-label{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:#71839a;padding:0 10px;margin-bottom:8px}
+.nav button{width:100%;text-align:left;padding:12px;border-radius:10px;background:transparent;color:#aebbd0;margin:3px 0;display:flex;gap:12px;align-items:center}
+.nav button.active,.nav button:hover{background:#1a2a40;color:white}.nav .ico{width:20px;text-align:center;font-size:17px}
+.sidebar-foot{margin-top:auto;border-top:1px solid var(--line);padding:16px 8px;color:var(--muted);font-size:12px}
+main{min-width:0;padding:28px clamp(16px,3vw,42px) 40px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}
+h1{font-size:25px;margin:0 0 4px;letter-spacing:-.5px}.subtitle{color:var(--muted);font-size:13px}
+.connection{display:flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid var(--line);background:var(--panel);border-radius:30px;font-size:12px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px #f16b7218}.dot.online{background:var(--accent);box-shadow:0 0 0 4px #35c58a18}
+.page{display:none}.page.active{display:block}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:24px 0 14px}.section-head h2{font-size:17px;margin:0}.section-head p{font-size:12px;color:var(--muted);margin:3px 0 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:19px;box-shadow:var(--shadow);min-width:0}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px}.card-head h3{margin:0;font-size:16px}.slave{font-size:11px;color:var(--muted);background:#1d2b40;padding:5px 9px;border-radius:20px}
+.state{font-size:11px;padding:5px 9px;border-radius:20px;background:#302a1d;color:var(--yellow)}.state.running{background:#123629;color:var(--accent)}.state.offline{background:#382127;color:var(--red)}
+.frequency-area{display:grid;grid-template-columns:145px 1fr;gap:18px;align-items:center;padding:8px 0 16px}
+.gauge{width:145px;height:145px;position:relative}.gauge svg{width:100%;height:100%;transform:rotate(-135deg)}.gauge .track{fill:none;stroke:#26364d;stroke-width:11;stroke-linecap:round;stroke-dasharray:226 283}.gauge .value{fill:none;stroke:var(--accent);stroke-width:11;stroke-linecap:round;stroke-dasharray:0 283;transition:stroke-dasharray .4s}
+.gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.gauge-number{font-size:27px;font-weight:750;letter-spacing:-1px}.gauge-unit{font-size:11px;color:var(--muted)}
+.metric-label{font-size:12px;color:var(--muted)}.metric-value{font-size:22px;font-weight:700;margin-top:3px}.metric-value small{font-size:12px;color:var(--muted);font-weight:500}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.control-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}.field input{width:100%;background:#0d1726;border:1px solid var(--line);border-radius:9px;padding:10px;color:var(--text);outline:none}.field input:focus{border-color:var(--blue)}
+.btn{padding:10px 12px;border-radius:9px;font-weight:650;font-size:12px;transition:.15s}.btn:disabled{opacity:.45;cursor:not-allowed}.btn-primary{background:var(--accent);color:#062016}.btn-secondary{background:#26364d;color:var(--text)}.btn-danger{background:#542a34;color:#ffdce0}.btn-blue{background:#1d4771;color:#dceeff}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.note{color:var(--muted);font-size:11px;margin-top:10px}
+.telemetry{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.tile{background:#0e1929;border:1px solid var(--line);border-radius:12px;padding:14px}.tile .label{font-size:11px;color:var(--muted)}.tile .val{font-size:22px;font-weight:750;margin-top:5px}.tile .unit{font-size:11px;color:var(--muted);font-weight:500}
+.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line)}.table th{font-size:11px;color:var(--muted);font-weight:600}
+.chart-wrap{height:230px;position:relative;margin-top:12px}.chart-wrap canvas{width:100%;height:100%}
+.notice{padding:12px 14px;border:1px solid #66532a;background:#302817;color:#f2d99c;border-radius:11px;font-size:12px;margin-bottom:18px}
+.footer{margin-top:24px;color:#6f8198;font-size:11px;text-align:center}
+.toast{position:fixed;right:22px;bottom:22px;background:#1c2b40;border:1px solid var(--line);padding:12px 16px;border-radius:10px;box-shadow:var(--shadow);display:none;max-width:340px;font-size:13px;z-index:10}.toast.show{display:block}
+@media(max-width:850px){.app{grid-template-columns:1fr}.sidebar{padding:12px;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--line)}.brand{margin-right:auto}.nav{display:flex}.nav-label,.sidebar-foot{display:none}.nav button{width:auto;padding:10px}.nav button span:last-child{display:none}main{padding-top:20px}}
+@media(max-width:620px){.grid{grid-template-columns:1fr}.topbar{align-items:flex-start;flex-direction:column}.frequency-area{grid-template-columns:125px 1fr}.gauge{width:125px;height:125px}.telemetry{gap:7px}.tile{padding:10px}.tile .val{font-size:18px}.actions{grid-template-columns:1fr}.nav button{padding:9px}.nav .ico{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="brand-mark">M</div><div><strong>MODBUS RTU</strong><small>Supervisório industrial</small></div></div>
+  <div class="nav">
+    <div class="nav-label">Navegação</div>
+    <button class="active" data-page="control"><span class="ico">◉</span><span>Controle</span></button>
+    <button data-page="monitor"><span class="ico">▥</span><span>Monitoramento</span></button>
+  </div>
+  <div class="sidebar-foot">Dois inversores · RS-485<br>Node-RED como gateway Modbus</div>
+</aside>
+<main>
+  <header class="topbar">
+    <div><h1 id="page-title">Controle dos inversores</h1><div class="subtitle" id="page-subtitle">Comando e ajuste de frequência — Modbus RTU</div></div>
+    <div class="connection"><span class="dot" id="connection-dot"></span><span id="connection-text">Aguardando Node-RED</span></div>
+  </header>
+
+  <section class="page active" id="page-control">
+    <div class="notice">A interface está preparada para consultar e comandar o Node-RED. Configure a URL da API em <b>CONFIG.API_BASE</b> no final deste arquivo antes de publicar.</div>
+    <div class="grid" id="control-cards"></div>
+  </section>
+
+  <section class="page" id="page-monitor">
+    <div class="section-head"><div><h2>Variáveis elétricas</h2><p>Leitura dos registradores 0x7003, 0x7004 e 0x7005</p></div></div>
+    <div class="grid" id="monitor-cards"></div>
+    <div class="section-head"><div><h2>Histórico de potência</h2><p>Últimas amostras recebidas pelo navegador</p></div></div>
+    <div class="card chart-wrap"><canvas id="power-chart"></canvas></div>
+    <div class="footer">O histórico é mantido apenas enquanto esta página estiver aberta.</div>
+  </section>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+/*
+ * CONTRATO ESPERADO DA API NODE-RED
+ * GET  /api/status -> JSON:
+ * {
+ *   "inverters": {
+ *     "1": {"frequency": 35.0, "setFrequency": 40.0, "voltage": 220, "current": 2.5, "power": 550, "running": false, "online": true},
+ *     "2": {"frequency": 45.0, "setFrequency": 50.0, "voltage": 220, "current": 3.1, "power": 682, "running": true, "online": true}
+ *   }
+ * }
+ * POST /api/frequency -> {"id":1,"value":40.0}
+ * POST /api/command   -> {"id":1,"value":1} // 1 horário, 2 anti-horário, 5 parar
+ *
+ * Ajuste API_BASE para o endereço acessível do Node-RED.
+ * Ex.: http://192.168.0.100:1880
+ */
+const CONFIG = {
+  API_BASE: "http://localhost:1880",
+  POLL_INTERVAL_MS: 1000,
+  MAX_FREQUENCY_HZ: 60
+};
+
+const state = {
+  inverters: {
+    1: {frequency:null,setFrequency:null,voltage:null,current:null,power:null,running:false,online:false},
+    2: {frequency:null,setFrequency:null,voltage:null,current:null,power:null,running:false,online:false}
+  },
+  history: {1:[],2:[]}
+};
+const $ = s => document.querySelector(s);
+const fmt = (v,d=1) => Number.isFinite(Number(v)) ? Number(v).toFixed(d) : "--";
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function renderControlCards(){
+  $("#control-cards").innerHTML = [1,2].map(id=>`
+    <article class="card">
+      <div class="card-head"><h3>Inversor ${id}</h3><span class="slave">Modbus ID ${id}</span></div>
+      <div class="frequency-area">
+        <div class="gauge">
+          <svg viewBox="0 0 120 120" aria-label="Gauge de frequência">
+            <circle class="track" cx="60" cy="60" r="45"/>
+            <circle class="value" id="gauge-${id}" cx="60" cy="60" r="45"/>
+          </svg>
+          <div class="gauge-center"><div class="gauge-number" id="freq-${id}">--</div><div class="gauge-unit">Hz · 0x7000</div></div>
+        </div>
+        <div><div class="metric-label">Frequência definida</div><div class="metric-value"><span id="setfreq-${id}">--</span> <small>Hz</small></div><div class="metric-label" style="margin-top:5px">Registrador 0x7001</div><div style="margin-top:12px"><span class="state offline" id="state-${id}">Sem comunicação</span></div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="control-grid">
+        <div class="field"><label for="frequency-${id}">Nova frequência (Hz) · 0x1000</label><input id="frequency-${id}" type="number" min="0" max="${CONFIG.MAX_FREQUENCY_HZ}" step="0.1" placeholder="Ex.: 30.0"></div>
+        <div style="display:flex;align-items:end"><button class="btn btn-primary" style="width:100%" onclick="setFrequency(${id})">Enviar frequência</button></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="sendCommand(${id},1)">▶ Horário</button>
+        <button class="btn btn-blue" onclick="sendCommand(${id},2)">◀ Anti-horário</button>
+        <button class="btn btn-danger" onclick="sendCommand(${id},5)">■ Desligar</button>
+      </div>
+      <div class="note">Comando de operação: registrador 0x2000</div>
+    </article>`).join("");
+}
+function renderMonitorCards(){
+  $("#monitor-cards").innerHTML = [1,2].map(id=>`
+    <article class="card">
+      <div class="card-head"><h3>Inversor ${id}</h3><span class="slave">Modbus ID ${id}</span></div>
+      <div class="telemetry">
+        <div class="tile"><div class="label">Tensão · 0x7003</div><div class="val"><span id="voltage-${id}">--</span><span class="unit"> V</span></div></div>
+        <div class="tile"><div class="label">Corrente · 0x7004</div><div class="val"><span id="current-${id}">--</span><span class="unit"> A</span></div></div>
+        <div class="tile"><div class="label">Potência · 0x7005</div><div class="val"><span id="power-${id}">--</span><span class="unit"> W</span></div></div>
+      </div>
+    </article>`).join("");
+}
+function updateUI(){
+  [1,2].forEach(id=>{
+    const d=state.inverters[id];
+    $(`#freq-${id}`).textContent=fmt(d.frequency);
+    $(`#setfreq-${id}`).textContent=fmt(d.setFrequency);
+    const ratio=Math.max(0,Math.min(1,(Number(d.frequency)||0)/CONFIG.MAX_FREQUENCY_HZ));
+    $(`#gauge-${id}`).style.strokeDasharray=`${226*ratio} 283`;
+    const badge=$(`#state-${id}`);
+    badge.textContent=!d.online?"Sem comunicação":(d.running?"Em operação":"Parado");
+    badge.className="state "+(!d.online?"offline":(d.running?"running":""));
+    $(`#voltage-${id}`).textContent=fmt(d.voltage,1);
+    $(`#current-${id}`).textContent=fmt(d.current,2);
+    $(`#power-${id}`).textContent=fmt(d.power,1);
+  });
+  drawChart();
+}
+async function api(path,body){
+  const opts=body===undefined?{method:"GET"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)};
+  const response=await fetch(CONFIG.API_BASE+path,opts);
+  if(!response.ok) throw new Error(`HTTP ${response.status}`);
+  const type=response.headers.get("content-type")||"";
+  return type.includes("application/json")?response.json():null;
+}
+async function refresh(){
+  try{
+    const data=await api("/api/status");
+    if(!data || !data.inverters) throw new Error("Formato de resposta inválido");
+    [1,2].forEach(id=>{
+      const d=data.inverters[String(id)]||data.inverters[id];
+      if(d){state.inverters[id]={...state.inverters[id],...d,online:d.online!==false};}
+      else state.inverters[id].online=false;
+      const p=Number(state.inverters[id].power);
+      if(Number.isFinite(p)){state.history[id].push(p);if(state.history[id].length>60)state.history[id].shift();}
+    });
+    $("#connection-dot").classList.add("online");
+    $("#connection-text").textContent="Node-RED conectado";
+  }catch(e){
+    [1,2].forEach(id=>state.inverters[id].online=false);
+    $("#connection-dot").classList.remove("online");
+    $("#connection-text").textContent="Node-RED indisponível";
+  }
+  updateUI();
+}
+async function setFrequency(id){
+  const input=$(`#frequency-${id}`), value=Number(input.value);
+  if(!input.value || !Number.isFinite(value) || value<0 || value>CONFIG.MAX_FREQUENCY_HZ){toast("Informe uma frequência válida entre 0 e 60 Hz.");return;}
+  try{await api("/api/frequency",{id,value});toast(`Frequência enviada ao inversor ${id}.`);input.value="";}
+  catch(e){toast("Não foi possível enviar. Verifique Node-RED e comunicação.");}
+}
+async function sendCommand(id,value){
+  const labels={1:"Ligar em sentido horário",2:"Ligar em sentido anti-horário",5:"Desligar"};
+  if(!confirm(`${labels[value]} o inversor ${id}?`))return;
+  try{await api("/api/command",{id,value});toast(`Comando enviado ao inversor ${id}.`);}
+  catch(e){toast("Falha ao enviar comando. Verifique a conexão.");}
+}
+function toast(message){const el=$("#toast");el.textContent=message;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),3200);}
+function drawChart(){
+  const canvas=$("#power-chart");if(!canvas)return;
+  const rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  canvas.width=Math.max(1,rect.width*dpr);canvas.height=Math.max(1,rect.height*dpr);
+  const ctx=canvas.getContext("2d");ctx.scale(dpr,dpr);
+  const w=rect.width,h=rect.height,pad=32;
+  ctx.clearRect(0,0,w,h);ctx.font="11px system-ui";ctx.fillStyle="#91a2b8";ctx.strokeStyle="#26364d";ctx.lineWidth=1;
+  for(let i=0;i<5;i++){let y=pad+(h-pad*1.5)*i/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-10,y);ctx.stroke();}
+  const all=[...state.history[1],...state.history[2]].filter(Number.isFinite);
+  const max=Math.max(100,...all)*1.15;
+  [1,2].forEach((id,index)=>{
+    const arr=state.history[id];if(arr.length<2)return;
+    ctx.strokeStyle=index===0?"#35c58a":"#55a7ff";ctx.lineWidth=2;ctx.beginPath();
+    arr.forEach((v,i)=>{const x=pad+(w-pad-15)*i/Math.max(1,arr.length-1);const y=h-pad-(h-pad*1.5)*(v/max);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();
+  });
+  ctx.fillStyle="#91a2b8";ctx.fillText("Potência (W)",pad,14);
+  ctx.fillStyle="#35c58a";ctx.fillText("● Inversor 1",w-180,14);
+  ctx.fillStyle="#55a7ff";ctx.fillText("● Inversor 2",w-90,14);
+}
+document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b===btn));
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===`page-${btn.dataset.page}`));
+  const monitor=btn.dataset.page==="monitor";
+  $("#page-title").textContent=monitor?"Monitoramento dos inversores":"Controle dos inversores";
+  $("#page-subtitle").textContent=monitor?"Tensão, corrente e potência de saída":"Comando e ajuste de frequência — Modbus RTU";
+  if(monitor)drawChart();
+}));
+renderControlCards();renderMonitorCards();refresh();setInterval(refresh,CONFIG.POLL_INTERVAL_MS);
+window.addEventListener("resize",drawChart);
+</script>
+</body>
+</html>
