@@ -7,6 +7,24 @@
 <title>Supervisório | Modbus RTU</title>
 <style>
 :root{--bg:#0b1220;--panel:#121d2e;--panel2:#172438;--line:#26364d;--text:#e8eef7;--muted:#91a2b8;--accent:#35c58a;--blue:#55a7ff;--red:#f16b72;--yellow:#e9b95b;--shadow:0 12px 30px #0003}
+:root[data-theme="light"]{--bg:#f2f5f9;--panel:#ffffff;--panel2:#edf2f8;--line:#d8e0ea;--text:#172235;--muted:#64748b;--accent:#159b68;--blue:#2478c7;--red:#d94b55;--yellow:#a97819;--shadow:0 8px 24px #20304712}
+:root[data-theme="light"] .sidebar{background:#e8eef5}
+:root[data-theme="light"] .brand-mark{color:#fff}
+:root[data-theme="light"] .nav button{color:#52647b}
+:root[data-theme="light"] .nav button.active,:root[data-theme="light"] .nav button:hover{background:#d7e2ef;color:#172235}
+:root[data-theme="light"] .slave{background:#edf2f8;color:#64748b}
+:root[data-theme="light"] .field input,:root[data-theme="light"] .tile{background:#f7f9fc}
+:root[data-theme="light"] .state{background:#fff3d7}
+:root[data-theme="light"] .state.running{background:#def7eb}
+:root[data-theme="light"] .state.offline{background:#fde8e9}
+:root[data-theme="light"] .btn-secondary{background:#e3eaf2;color:#26364d}
+:root[data-theme="light"] .btn-danger{background:#fbe3e5;color:#a52c37}
+:root[data-theme="light"] .btn-blue{background:#dceeff;color:#174f80}
+:root[data-theme="light"] .notice{background:#fff8e7;color:#765617;border-color:#ead49d}
+:root[data-theme="light"] .connection{background:#fff}
+:root[data-theme="light"] .gauge .track{stroke:#dce4ed}
+:root[data-theme="light"] .toast{background:#fff;color:#172235}
+:root[data-theme="light"] .sidebar-foot{border-color:var(--line)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,Segoe UI,Arial,sans-serif}
 button,input{font:inherit}button{cursor:pointer;border:0}
 .app{min-height:100vh;display:grid;grid-template-columns:248px 1fr}
@@ -19,7 +37,7 @@ button,input{font:inherit}button{cursor:pointer;border:0}
 main{min-width:0;padding:28px clamp(16px,3vw,42px) 40px}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}
 h1{font-size:25px;margin:0 0 4px;letter-spacing:-.5px}.subtitle{color:var(--muted);font-size:13px}
-.connection{display:flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid var(--line);background:var(--panel);border-radius:30px;font-size:12px;color:var(--muted)}
+.top-actions{display:flex;align-items:center;gap:10px}.theme-toggle{padding:9px 12px;border:1px solid var(--line);border-radius:30px;background:var(--panel);color:var(--text);font-size:12px}.connection{display:flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid var(--line);background:var(--panel);border-radius:30px;font-size:12px;color:var(--muted)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px #f16b7218}.dot.online{background:var(--accent);box-shadow:0 0 0 4px #35c58a18}
 .page{display:none}.page.active{display:block}
 .section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:24px 0 14px}.section-head h2{font-size:17px;margin:0}.section-head p{font-size:12px;color:var(--muted);margin:3px 0 0}
@@ -60,7 +78,7 @@ h1{font-size:25px;margin:0 0 4px;letter-spacing:-.5px}.subtitle{color:var(--mute
 <main>
   <header class="topbar">
     <div><h1 id="page-title">Controle dos inversores</h1><div class="subtitle" id="page-subtitle">Comando e ajuste de frequência — Modbus RTU</div></div>
-    <div class="connection"><span class="dot" id="connection-dot"></span><span id="connection-text">Aguardando Node-RED</span></div>
+    <div class="top-actions"><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Alternar tema">☀️ Tema claro</button><div class="connection"><span class="dot" id="connection-dot"></span><span id="connection-text">Aguardando Node-RED</span></div></div>
   </header>
 
   <section class="page active" id="page-control">
@@ -232,6 +250,19 @@ document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("clic
   $("#page-subtitle").textContent=monitor?"Tensão, corrente e potência de saída":"Comando e ajuste de frequência — Modbus RTU";
   if(monitor)drawChart();
 }));
+function applyTheme(theme){
+  document.documentElement.dataset.theme=theme;
+  const light=theme==="light";
+  $("#theme-toggle").textContent=light?"🌙 Tema escuro":"☀️ Tema claro";
+  $("#theme-toggle").setAttribute("aria-label",light?"Ativar tema escuro":"Ativar tema claro");
+  try{localStorage.setItem("dashboard-theme",theme);}catch(e){}
+  drawChart();
+}
+let savedTheme="dark";
+try{savedTheme=localStorage.getItem("dashboard-theme")||"dark";}catch(e){}
+applyTheme(savedTheme);
+$("#theme-toggle").addEventListener("click",()=>applyTheme(document.documentElement.dataset.theme==="light"?"dark":"light"));
+
 renderControlCards();renderMonitorCards();refresh();setInterval(refresh,CONFIG.POLL_INTERVAL_MS);
 window.addEventListener("resize",drawChart);
 </script>
