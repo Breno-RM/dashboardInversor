@@ -243,7 +243,7 @@ async function setFrequency(id){
 }
 async function sendCommand(id,value){
   const labels={1:"Ligar em sentido horário",2:"Ligar em sentido anti-horário",5:"Desligar"};
-  if(!confirm(`${labels[value]} o inversor ${id}?`))return;
+  //if(!confirm(`${labels[value]} o inversor ${id}?`))return;
   try{await api("/api/command",{id,value});toast(`Comando enviado ao inversor ${id}.`);}
   catch(e){toast("Falha ao enviar comando. Verifique a conexão.");}
 }
