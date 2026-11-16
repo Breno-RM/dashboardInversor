@@ -137,7 +137,7 @@ function renderControlCards(){
         <div class="gauge">
           <svg viewBox="0 0 120 120" aria-label="Gauge de frequência">
             <circle class="track" cx="60" cy="60" r="45"/>
-            <circle class="value" id="gauge-${id}" cx="60" cy="60" r="45"/>
+            <circle class="value" id="gauge-${id/100}" cx="60" cy="60" r="45"/>
           </svg>
           <div class="gauge-center"><div class="gauge-number" id="freq-${id}">--</div><div class="gauge-unit">Hz · 0x7000</div></div>
         </div>
