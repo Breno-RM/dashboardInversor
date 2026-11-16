@@ -113,7 +113,7 @@ h1{font-size:25px;margin:0 0 4px;letter-spacing:-.5px}.subtitle{color:var(--mute
  * Ex.: http://192.168.0.100:1880
  */
 const CONFIG = {
-  API_BASE: " https://millennium-gates-paid-lite.trycloudflare.com",
+  API_BASE: "https://millennium-gates-paid-lite.trycloudflare.com",
   POLL_INTERVAL_MS: 1000,
   MAX_FREQUENCY_HZ: 60
 };
@@ -183,13 +183,38 @@ function updateUI(){
   });
   drawChart();
 }
-async function api(path,body){
-  const opts=body===undefined?{method:"GET"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)};
-  const response=await fetch(CONFIG.API_BASE+path,opts);
-  if(!response.ok) throw new Error(`HTTP ${response.status}`);
-  const type=response.headers.get("content-type")||"";
-  return type.includes("application/json")?response.json():null;
+
+async function api(path, body) {
+  const opts = body === undefined
+    ? { method: "GET" }
+    : {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      };
+
+  const response = await fetch(
+    CONFIG.API_BASE.trim() + path,
+    opts
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error || `Erro HTTP ${response.status}`
+    );
+  }
+
+  if (data && data.success === false) {
+    throw new Error(data.error || "Comando recusado pelo Node-RED");
+  }
+
+  return data;
 }
+
 async function refresh(){
   try{
     const data=await api("/api/status");
